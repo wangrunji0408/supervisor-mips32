@@ -24,7 +24,7 @@ uregs:
      *  用户程序入口临时存储：0x807F0078
      */
 SHELL:
-    jal READSERIAL                  // 读操作符
+    jal READ_SERIAL                 // 读操作符
     nop
 
     ori t0, zero, SH_OP_R
@@ -46,7 +46,7 @@ SHELL:
     nop
 
 .OP_T:                              // 操作 - 打印TLB项
-    jal READSERIALWORD              // 取num(index)
+    jal READ_SERIAL_WORD            // 取num(index)
     nop
     addiu sp, sp, -0x18
     sw s0, 0x0(sp)
@@ -78,7 +78,7 @@ SHELL:
 .LC3:
     lb a0, 0x0(s0)                  // 读一字节
     addiu s1, s1, -1                // 滚动计数器
-    jal WRITESERIAL                 // 打印
+    jal WRITE_SERIAL                // 打印
     nop
     addiu s0, s0, 1                 // 移动打印指针
     bne s1, zero, .LC3              // 打印循环
@@ -101,7 +101,7 @@ SHELL:
 .LC0:
     lb a0, %lo(uregs)(s0)           // 读取字节
     addiu s1, s1, -1                // 滚动计数器
-    jal WRITESERIAL                 // 写入串口
+    jal WRITE_SERIAL                // 写入串口
     nop
     addiu s0, s0, 0x1               // 移动打印指针
     bne s1, zero, .LC0              // 打印循环
@@ -118,17 +118,17 @@ SHELL:
     sw s0, 0(sp)
     sw s1, 4(sp)
 
-    jal READSERIALWORD
+    jal READ_SERIAL_WORD
     nop
     or s0, v0, zero                 // 获得addr
-    jal READSERIALWORD
+    jal READ_SERIAL_WORD
     nop
     or s1, v0, zero                 // 获得num
 
 .LC1:
     lb a0, 0(s0)                    // 读取字节
     addiu s1, s1, -1                // 滚动计数器
-    jal WRITESERIAL                 // 写入串口
+    jal WRITE_SERIAL                // 写入串口
     nop
     addiu s0, s0, 0x1               // 移动打印指针
     bne s1, zero, .LC1              // 打印循环
@@ -145,15 +145,15 @@ SHELL:
     sw s0, 0(sp)
     sw s1, 4(sp)
 
-    jal READSERIALWORD
+    jal READ_SERIAL_WORD
     nop
     or s0, v0, zero                 // 获得addr
-    jal READSERIALWORD
+    jal READ_SERIAL_WORD
     nop
     or s1, v0, zero                 // 获得num
     srl s1, s1, 2                   // num除4，获得字数
 .LC2:                               // 每次写入一字
-    jal READSERIALWORD              // 从串口读入一字
+    jal READ_SERIAL_WORD            // 从串口读入一字
     nop
     sw v0, 0(s0)                    // 写内存一字
     addiu s1, s1, -1                // 滚动计数器
@@ -168,11 +168,11 @@ SHELL:
     nop
 
 .OP_G:
-    jal READSERIALWORD              // 获取addr
+    jal READ_SERIAL_WORD            // 获取addr
     nop
 
     ori a0, zero, TIMERSET          // 写TIMERSET(0x06)信号
-    jal WRITESERIAL                 // 告诉终端用户程序开始运行
+    jal WRITE_SERIAL                // 告诉终端用户程序开始运行
     nop
 
 #ifdef ENABLE_INT
@@ -265,7 +265,7 @@ SHELL:
 
     lw sp, PUTREG(32)(ra)
     ori a0, zero, TIMETOKEN         // 发送TIMETOKEN(0x07)信号
-    jal WRITESERIAL                 // 告诉终端用户程序结束运行
+    jal WRITE_SERIAL                // 告诉终端用户程序结束运行
     nop
 
     j .DONE

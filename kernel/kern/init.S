@@ -3,15 +3,15 @@
 #include <unistd.h>
 #include <exception.h>
 
-    .set noreorder
-    .set noat
+    .set noreorder                  // 禁止指令重排序
+    .set noat                       // 禁止使用$at寄存器
 
     .section .bss
     .p2align 2
-    .global TCBT                    // thread control block table
+    .global TCBT                    // Thread Control Block Table
 TCBT:
-    .long 0
-    .long 0
+    .long 0                         // TCB for thread0(idle)
+    .long 0                         // TCB for thread1(shell/user)
     .global current                 // current thread TCB address
 current:
     .long 0
@@ -99,21 +99,21 @@ bss_init_done:
     lui t0, 0xBFD0                  // NOTE: all COM_* share high 16 bits
                                     // 0xBFD0 should be %hi(COM1) but can not be used
                                     // due to a compiler bug (bugzilla/20649)
-    sb zero, %lo(COM_FCR)(t0)       // console.c:54
+    sb zero, %lo(COM_FCR)(t0)       // *FCR = 0
     ori t1, zero, %lo(COM_LCR_DLAB)
-    sb t1, %lo(COM_LCR)(t0)         // :57
+    sb t1, %lo(COM_LCR)(t0)         // *LCR = LCR_DLAB
     ori t1, zero, %lo(COM_DLL_VAL)
-    sb t1, %lo(COM_DLL)(t0)         // :58
-    sb zero, %lo(COM_DLM)(t0)       // :59
+    sb t1, %lo(COM_DLL)(t0)         // *DLL = DLL_VAL
+    sb zero, %lo(COM_DLM)(t0)       // *DLM = 0
     ori t1, zero, %lo(COM_LCR_CONFIG)
-    sb t1, %lo(COM_LCR)(t0)         // :62
-    sb zero, %lo(COM_MCR)(t0)       // :65
+    sb t1, %lo(COM_LCR)(t0)         // *LCR = LCR_CONFIG
+    sb zero, %lo(COM_MCR)(t0)       // *MCR = 0
     ori t1, zero, %lo(COM_IER_RDI)
-    sb t1, %lo(COM_IER)(t0)         // :67
+    sb t1, %lo(COM_IER)(t0)         // *IER = IER_RDI
 #else
-    lui t0, %hi(SerialStat)
+    lui t0, %hi(SERIAL_STAT)
     ori t1, zero, 0x10
-    sb t1, %lo(SerialStat)(t0)      // 串口可读中断
+    sb t1, %lo(SERIAL_STAT)(t0)     // 串口可读中断
 #endif
 
 #ifdef ENABLE_INT
@@ -289,7 +289,7 @@ WELCOME:
     lb a0, 0(s0)
 .Loop0:
     addiu s0, s0, 0x1
-    jal WRITESERIAL                 // 调用串口写函数
+    jal WRITE_SERIAL                // 调用串口写函数
     nop
     lb a0, 0(s0)
     bne a0, zero, .Loop0            // 打印循环至0结束符

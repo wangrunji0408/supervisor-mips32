@@ -7,16 +7,16 @@
     .set noat
     .p2align 2
     .text
-    .global EXCEPTIONHANDLER
-    .global RETURNFRMTRAP
+    .global EXCEPTION_HANDLER
+    .global RETURN_FROM_TRAP
 
 /* 本文件仅在启用异常处理时有用 */
 
 #ifndef ENABLE_INT
 FATAL:
-EXCEPTIONHANDLER:
-RETURNFRMTRAP:
-WAKEUPSHELL:
+EXCEPTION_HANDLER:
+RETURN_FROM_TRAP:
+WAKEUP_SHELL:
 SYSCALL:
     b   FATAL                       // 不支持异常时，这些入口都不应该进入，如果进入就永远等待，用于调试
     nop
@@ -25,7 +25,7 @@ SYSCALL:
 FATAL:                              
                                     // 严重问题，重启
     ori a0, zero, 0x80              // 错误信号
-    jal WRITESERIAL                 // 发送
+    jal WRITE_SERIAL                // 发送
     nop
     lui v0, %hi(START)              // 重启地址
     addiu v0, %lo(START)
@@ -33,7 +33,7 @@ FATAL:
     nop
 
 
-EXCEPTIONHANDLER:
+EXCEPTION_HANDLER:
     mfc0 k0, CP0_STATUS             // 处理一般中断
     nop
     xori k1, k0, ST0_IE
@@ -86,7 +86,7 @@ EXCEPTIONHANDLER:
     andi k1, k0, 0x00FF             // 截取CP0_CAUSE 的ExcCode
     srl k1, k1, 2
     ori k0, zero, EX_IRQ            // 硬件中断
-    beq k1, k0, WAKEUPSHELL         // 让主线程控制
+    beq k1, k0, WAKEUP_SHELL        // 让主线程控制
     nop
     ori k0, zero, EX_SYS            // 系统调用
     beq k1, k0, SYSCALL             // 内核处理
@@ -98,7 +98,7 @@ EXCEPTIONHANDLER:
     nop
 
 
-RETURNFRMTRAP:
+RETURN_FROM_TRAP:
     lw k0, TF_STATUS(sp)
     ori k0, k0, ST0_IE              // 使能中断。通常eret自动取消EXL位。
     xori k1, k0, ST0_ERL
@@ -141,13 +141,13 @@ RETURNFRMTRAP:
 
 
 
-WAKEUPSHELL:
+WAKEUP_SHELL:
     lui t1, %hi(current)
     lw t1, %lo(current)(t1)         // 取得当前线程TCB地址
     lui t0, %hi(TCBT)
     lw t0, %lo(TCBT)(t0)            // 取得idle线程TCB地址
     nop
-    bne t0, t1, RETURNFRMTRAP       // 若当前是shell/user线程无需调度
+    bne t0, t1, RETURN_FROM_TRAP    // 若当前是shell/user线程无需调度
     nop
     j SCHEDULE                      // 进行调度使主线程获得控制权
     nop
@@ -165,7 +165,7 @@ SYSCALL:
 
     // 系统调用扩展
 
-    j RETURNFRMTRAP                 // 其他系统调用忽略
+    j RETURN_FROM_TRAP              // 其他系统调用忽略
     nop
 
 .syscall_wait:
@@ -173,9 +173,9 @@ SYSCALL:
     nop
 
 .syscall_putc:
-    jal WRITESERIAL                 // 写串口采用忙等待，不产生嵌套中断
+    jal WRITE_SERIAL                // 写串口采用忙等待，不产生嵌套中断
     nop
-    j RETURNFRMTRAP
+    j RETURN_FROM_TRAP
     nop
 #endif
 

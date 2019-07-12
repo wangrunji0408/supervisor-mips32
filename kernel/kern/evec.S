@@ -7,8 +7,8 @@
     .set noat
     .p2align 2
     .section .text.init
-    .global INITLOCATE
-INITLOCATE:                         // 定位启动程序
+    .global INIT_LOCATE
+INIT_LOCATE:                        // 定位启动程序
     lui k0, %hi(START)
     addiu k0, %lo(START)
     jr k0
@@ -16,8 +16,8 @@ INITLOCATE:                         // 定位启动程序
 
     .section .text.ebase180
 EHANDLERLOCATE:                     // 定位普通中断处理程序
-    lui k0, %hi(EXCEPTIONHANDLER)
-    addiu k0, %lo(EXCEPTIONHANDLER)
+    lui k0, %hi(EXCEPTION_HANDLER)
+    addiu k0, %lo(EXCEPTION_HANDLER)
     jr k0
     nop
 
