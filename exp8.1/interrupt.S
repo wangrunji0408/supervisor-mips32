@@ -1,3 +1,17 @@
+/* 
+# 简单中断测试程序
+
+需要实现以下指令：
+- lui, ori, xor, and, addi, nop
+- j, eret
+- mfc0, mtc0
+
+需要实现以下CP0寄存器：
+- status
+- epc
+
+*/
+
 #include <regdef.h>
 #include <mipsregs.h>
 #include <unistd.h>
@@ -10,16 +24,12 @@
     .section .text.init
     .global entry_vector
 entry_vector:						// 启动入口点：0x80000000
-    lui k0, %hi(start)
-    addiu k0, %lo(start)
-    jr k0
+    j start
     nop
 
     .section .text.trap
 trap_vector:						// 中断入口点：0x80000180
-    lui k0, %hi(trap_handler)
-    addiu k0, %lo(trap_handler)
-    jr k0
+    j trap_handler
     nop
 
     .section .text
@@ -64,7 +74,7 @@ start:
     nop
 
 spin:
-    b spin							// 等待中断
+    j spin							// 等待中断
     nop
     
 trap_handler:
